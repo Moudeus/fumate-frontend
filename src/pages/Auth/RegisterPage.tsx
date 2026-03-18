@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { register, verifyOTP, resendOTP } from '../../apis/AuthAPI/POST';
+import { register } from '../../apis/AuthAPI/POST';
 import './styles/AuthPage.css';
-import './styles/OTPModal.css';
 
 const RegisterPage = () => {
   const [formData, setFormData] = useState({
@@ -12,12 +11,8 @@ const RegisterPage = () => {
     lastName: '',
   });
   const [showPassword, setShowPassword] = useState(false);
-  const [showOTPModal, setShowOTPModal] = useState(false);
-  const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [resendLoading, setResendLoading] = useState(false);
-  const [resendTimer, setResendTimer] = useState(0);
   const navigate = useNavigate();
 
   const handleRegisterSubmit = async (e: React.FormEvent) => {
@@ -40,17 +35,8 @@ const RegisterPage = () => {
 
     try {
       await register(formData);
-      setShowOTPModal(true);
-      setResendTimer(60);
-      const timer = setInterval(() => {
-        setResendTimer((prev) => {
-          if (prev <= 1) {
-            clearInterval(timer);
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
+      // Skip OTP verification in production - redirect directly to login
+      navigate('/login', { state: { message: 'Đăng ký thành công! Vui lòng đăng nhập.' } });
     } catch (err: any) {
       console.error('Register error:', err);
       const errorMessage = err.response?.data?.message || err.message || 'Đăng ký thất bại';
@@ -60,70 +46,7 @@ const RegisterPage = () => {
     }
   };
 
-  const handleOtpChange = (index: number, value: string) => {
-    if (value.length > 1) return;
-    if (!/^\d*$/.test(value)) return;
 
-    const newOtp = [...otp];
-    newOtp[index] = value;
-    setOtp(newOtp);
-
-    if (value && index < 5) {
-      const nextInput = document.getElementById(`otp-${index + 1}`);
-      nextInput?.focus();
-    }
-  };
-
-  const handleOtpKeyDown = (index: number, e: React.KeyboardEvent) => {
-    if (e.key === 'Backspace' && !otp[index] && index > 0) {
-      const prevInput = document.getElementById(`otp-${index - 1}`);
-      prevInput?.focus();
-    }
-  };
-
-  const handleVerifyOTP = async () => {
-    const otpCode = otp.join('');
-    if (otpCode.length !== 6) {
-      setError('Vui lòng nhập đầy đủ 6 chữ số');
-      return;
-    }
-
-    setError('');
-    setLoading(true);
-
-    try {
-      await verifyOTP({ email: formData.email, otp: otpCode });
-      setShowOTPModal(false);
-      navigate('/login', { state: { message: 'Đăng ký thành công! Vui lòng đăng nhập.' } });
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Xác thực OTP thất bại');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleResendOTP = async () => {
-    setError('');
-    setResendLoading(true);
-
-    try {
-      await resendOTP(formData.email);
-      setResendTimer(60);
-      const timer = setInterval(() => {
-        setResendTimer((prev) => {
-          if (prev <= 1) {
-            clearInterval(timer);
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Gửi lại OTP thất bại');
-    } finally {
-      setResendLoading(false);
-    }
-  };
 
   return (
     <>
@@ -157,7 +80,7 @@ const RegisterPage = () => {
                     value={formData.firstName}
                     onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
                     required
-                    disabled={loading || showOTPModal}
+                    disabled={loading}
                   />
                 </div>
               </div>
@@ -176,7 +99,7 @@ const RegisterPage = () => {
                     value={formData.lastName}
                     onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
                     required
-                    disabled={loading || showOTPModal}
+                    disabled={loading}
                   />
                 </div>
               </div>
@@ -197,7 +120,7 @@ const RegisterPage = () => {
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   required
-                  disabled={loading || showOTPModal}
+                  disabled={loading}
                 />
               </div>
             </div>
@@ -217,7 +140,7 @@ const RegisterPage = () => {
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                   required
-                  disabled={loading || showOTPModal}
+                  disabled={loading}
                   style={{ paddingRight: '3rem' }}
                 />
                 <button
@@ -233,7 +156,7 @@ const RegisterPage = () => {
             </div>
 
             {/* Submit Button */}
-            <button type="submit" disabled={loading || showOTPModal} className="btn btn-primary">
+            <button type="submit" disabled={loading} className="btn btn-primary">
               {loading ? (
                 <>
                   <span className="btn-spinner">⏳</span>
@@ -258,73 +181,6 @@ const RegisterPage = () => {
           </form>
         </div>
       </div>
-
-      {/* OTP Modal */}
-      {showOTPModal && (
-        <div className="otp-modal-overlay">
-          <div className="otp-modal glass-card">
-            <div className="otp-modal-header">
-              <div className="otp-icon">✉️</div>
-              <h2>Xác thực Email</h2>
-              <p>Nhập mã OTP 6 chữ số được gửi đến</p>
-              <p className="email-highlight">{formData.email}</p>
-            </div>
-
-            {error && <div className="alert alert-error">{error}</div>}
-
-            <div className="otp-inputs">
-              {otp.map((digit, index) => (
-                <input
-                  key={index}
-                  id={`otp-${index}`}
-                  type="text"
-                  inputMode="numeric"
-                  maxLength={1}
-                  value={digit}
-                  onChange={(e) => handleOtpChange(index, e.target.value)}
-                  onKeyDown={(e) => handleOtpKeyDown(index, e)}
-                  disabled={loading}
-                  className="otp-input"
-                />
-              ))}
-            </div>
-
-            <button
-              type="button"
-              onClick={handleVerifyOTP}
-              disabled={loading || otp.join('').length !== 6}
-              className="otp-verify-btn"
-            >
-              {loading ? 'Đang xác thực...' : 'Xác thực'}
-            </button>
-
-            <div className="otp-footer">
-              <p>Không nhận được mã?</p>
-              <button
-                type="button"
-                onClick={handleResendOTP}
-                disabled={resendLoading || resendTimer > 0}
-                className="resend-btn"
-              >
-                {resendTimer > 0 ? `Gửi lại sau ${resendTimer}s` : 'Gửi lại'}
-              </button>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => {
-                setShowOTPModal(false);
-                setOtp(['', '', '', '', '', '']);
-                setError('');
-              }}
-              className="close-modal-btn"
-              disabled={loading}
-            >
-              ✕
-            </button>
-          </div>
-        </div>
-      )}
     </>
   );
 };
