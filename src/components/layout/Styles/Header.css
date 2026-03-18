@@ -1,0 +1,109 @@
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  padding: 1rem 0;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  background: rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.1);
+}
+
+.header .container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+.header .logo {
+  font-family: 'Poppins', sans-serif;
+  font-size: 1.75rem;
+  font-weight: 800;
+  text-decoration: none;
+  background: linear-gradient(135deg, #f97316 0%, #fb923c 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  transition: transform 0.3s ease;
+}
+
+.header .logo:hover {
+  transform: scale(1.05);
+}
+
+.header nav {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+.header nav a {
+  color: rgba(255, 255, 255, 0.9);
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  position: relative;
+  padding: 0.5rem 0;
+}
+
+.header nav a::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: linear-gradient(135deg, #f97316 0%, #fb923c 100%);
+  transition: width 0.3s ease;
+}
+
+.header nav a:hover {
+  color: #fff;
+}
+
+.header nav a:hover::after {
+  width: 100%;
+}
+
+.header nav span {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.9rem;
+}
+
+.header nav button {
+  background: rgba(249, 115, 22, 0.2);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(249, 115, 22, 0.3);
+  border-radius: 0.75rem;
+  padding: 0.5rem 1.25rem;
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px 0 rgba(249, 115, 22, 0.2);
+}
+
+.header nav button:hover {
+  background: rgba(249, 115, 22, 0.3);
+  box-shadow: 0 6px 16px 0 rgba(249, 115, 22, 0.4);
+  transform: translateY(-2px);
+}
+
+@media (max-width: 768px) {
+  .header .container {
+    padding: 0 1rem;
+  }
+
+  .header nav {
+    gap: 1rem;
+    font-size: 0.9rem;
+  }
+
+  .header nav span {
+    display: none;
+  }
+}
